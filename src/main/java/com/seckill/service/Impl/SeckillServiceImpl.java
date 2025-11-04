@@ -107,6 +107,8 @@ public class SeckillServiceImpl implements ISeckillService {
         SeckillGoods seckillGoods = seckillGoodsMapper.selectById(goodsId);
         //4.判断是否存在
         if (seckillGoods == null) {
+            //将空值添加到缓存中(避免缓存穿透)
+            stringRedisTemplate.opsForValue().set(stockKey, "", 60 * 60 * 1000);
             //不存在,返回错误信息
             return Result.error("商品不存在");
         }
