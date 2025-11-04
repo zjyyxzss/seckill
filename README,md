@@ -1,0 +1,21 @@
+# 高并发秒杀系统 (Seckill System)
+
+一个基于 Spring Boot + MyBatis-Plus 的秒杀项目后端。
+
+## 技术栈
+* Spring Boot 3.2.5
+* MyBatis-Plus 3.5.7
+* MySQL 8.0
+
+---
+
+## V1.0 版本 (当前版本)
+
+这是一个“同步数据库”的原始版本。
+
+### 已知问题 (JMeter 压测复现)
+* **严重超卖：** 200 并发抢 10 件库存，导致创建了 200 个订单。
+* **库存错误：** `stock_count` 被错误地扣减为 9 (应为 0)。
+* **根本原因：** `select` 和 `update` 之间的竞态条件 (Race Condition) 导致。
+
+*(下一步：V2.0 将引入 Redis + Lua 解决此问题)*

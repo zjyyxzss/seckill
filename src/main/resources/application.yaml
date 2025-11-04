@@ -1,0 +1,26 @@
+# Spring Boot ????
+spring:
+  application:
+    name: seckill # ??????
+
+  # 1. ????????
+  datasource:
+    url: jdbc:mysql://localhost:3306/seckill?serverTimezone=UTC&useSSL=false&characterEncoding=utf8
+    username: root          # <--?????????? MySQL ???
+    password: zjy # <--?????????? MySQL ??
+    driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8.0+ ???
+mybatis-plus:
+  # (可选) 扫描你的实体类包, 用于别名
+  # 【请确认】这是你 entity/pojo 类的包名
+  type-aliases-package: com.seckill.pojo
+  configuration:
+    # 开启 MyBatis-Plus 的 Log, 可以在控制台看到执行的 SQL
+    # 这对我们调试 V1.0 的超卖问题至关重要！
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+  global-config:
+    db-config:
+      # 配置主键策略为自动增长
+      id-type: auto
+
+
