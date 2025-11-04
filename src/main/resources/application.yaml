@@ -1,7 +1,10 @@
-# Spring Boot ????
+
 spring:
   application:
-    name: seckill # ??????
+    name: seckill
+  redis:
+    host: 192.168.100.129   # 你的 Redis 服务器地址
+    port: 6379
 
   # 1. ????????
   datasource:

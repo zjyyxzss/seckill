@@ -17,19 +17,26 @@ private OrderInfoMapper orderInfoMapper;
 
 
         // 创建订单
+
+        
         @Override
-        public Result createOrder(SeckillGoods seckillGoods) {
+        public Result createOrder(SeckillGoods seckillGoods, Long userId) {
             //创建订单
             OrderInfo orderInfo = new OrderInfo();
-            orderInfo.setUserId(1L);
+            orderInfo.setUserId(userId);
             orderInfo.setGoodsId(seckillGoods.getId());
             orderInfo.setGoodsName(seckillGoods.getGoodsName());
             orderInfo.setGoodsCount(1);
             orderInfo.setSeckillPrice(seckillGoods.getSeckillPrice());
             orderInfo.setCreateDate(new Date());
             orderInfo.setStatus("0");
+            //生成订单编号
+            orderInfo.setOrderSn(generateOrderSn(userId, seckillGoods.getId()));
             orderInfoMapper.insert(orderInfo);
             return Result.success(orderInfo);
         }
-    }
 
+    private String generateOrderSn(Long userId, Long id) {
+        return "SK" + System.currentTimeMillis() + userId + id;
+    }
+}

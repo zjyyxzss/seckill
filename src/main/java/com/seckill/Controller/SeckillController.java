@@ -1,7 +1,7 @@
 package com.seckill.Controller;
 
 import com.seckill.pojo.Result;
-import com.seckill.pojo.SeckillGoods;
+
 import com.seckill.service.ISeckillService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,4 +19,10 @@ public class SeckillController {
     public Result doSeckill(Long goodsId){
         return seckillService.doSeckill(goodsId);
     }
+    //查询商品,添加到缓存中
+    @GetMapping("/v1/preheat")
+    public Result preheatStock(Long goodsId, Integer stockCount){
+        return seckillService.preheatStock(goodsId,stockCount);
+    }
+
 }
