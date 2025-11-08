@@ -5,7 +5,7 @@ import com.seckill.pojo.Result;
 public interface ISeckillService {
 
 
-    Result doSeckill(Long goodsId);
+    Result doSeckill(Long goodsId , Long userId);
 
 
     //将库存预热到缓存中

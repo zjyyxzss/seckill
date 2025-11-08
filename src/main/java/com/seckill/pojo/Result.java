@@ -29,4 +29,10 @@ public class Result {
         return result;
     }
 
+    public static Result queue(String msg) {
+        Result result = new Result();
+        result.message = msg;
+        result.code = 2;
+        return result;
+    }
 }

@@ -1,10 +1,13 @@
 package com.seckill.service.Impl;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.seckill.mapper.OrderInfoMapper;
 import com.seckill.mapper.SeckillGoodsMapper;
+import com.seckill.mq.MQSender;
 import com.seckill.pojo.Result;
 import com.seckill.pojo.SeckillGoods;
+import com.seckill.pojo.SeckillMessage;
 import com.seckill.service.IOrderInfoService;
 import com.seckill.service.ISeckillService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Service
-public class SeckillServiceImpl implements ISeckillService {
+public class SeckillServiceImpl extends ServiceImpl<SeckillGoodsMapper, SeckillGoods> implements ISeckillService {
     @Autowired
     private SeckillGoodsMapper seckillGoodsMapper;
     @Autowired
@@ -28,35 +31,31 @@ public class SeckillServiceImpl implements ISeckillService {
     private IOrderInfoService orderInfoService;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private MQSender mqSender;
     private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
     static {
         SECKILL_SCRIPT = new DefaultRedisScript<>();
         SECKILL_SCRIPT.setScriptSource(new ResourceScriptSource(new ClassPathResource("seckill.lua")));
         SECKILL_SCRIPT.setResultType(Long.class);
     }
-
-
-
+    /**
+     * 秒杀
+     * @param goodsId 商品id
+     * @param userId 用户id
+     * @return 秒杀结果
+     */
     @Override
-    @Transactional
-    public Result doSeckill(Long goodsId) {
-        long userId = 0;
-        try {
-            //1.获取用户ID - 使用随机数模拟不同用户
-            // 当前实现
-            userId = (long) (Math.random() * 1000000) + 1;
-            
-            // 建议改为更可靠的生成方式
-            userId = System.currentTimeMillis() * 1000 + (long)(Math.random() * 1000);
-            
+    public Result doSeckill(Long goodsId , Long userId) {
             //2.执行lua脚本
             long result = stringRedisTemplate.execute(
-                    SECKILL_SCRIPT,// 脚本
+                    SECKILL_SCRIPT,
                     Arrays.asList(
-                            "seckill:stock:" + goodsId,   // KEYS[1]
-                            "seckill:users:" + goodsId    // KEYS[2]
-                    ),              // 两个 KEY
-                    Long.toString(userId)  // ARGV[1]
+                            "seckill:stock:" + goodsId,
+                            "seckill:users:" + goodsId
+                    ),
+                    Long.toString(userId)
             );
             // 3. 分析 Lua 脚本的返回结果
             if (result == 1L) {
@@ -66,30 +65,10 @@ public class SeckillServiceImpl implements ISeckillService {
                 return Result.error("商品已售罄");
             }
             // 4. 如果 result == 0, 代表抢购成功！
-            // 同步扣减数据库库存并创建订单
-            SeckillGoods seckillGoods = seckillGoodsMapper.selectById(goodsId);
-            if (seckillGoods == null) {
-                return Result.error("商品不存在");
-            }
-
-            // 扣减数据库库存
-            int updatedRows = seckillGoodsMapper.decreaseStock(goodsId);
-            if (updatedRows <= 0) {
-                // 回滚Redis库存
-                stringRedisTemplate.opsForValue().increment("seckill:stock:" + goodsId);
-                stringRedisTemplate.opsForSet().remove("seckill:users:" + goodsId, Long.toString(userId));
-                return Result.error("库存不足");
-            }
-            // 创建订单
-            orderInfoService.createOrder(seckillGoods, userId);
-
-            return Result.success("抢购成功");
-        } catch (Exception e) {
-            // 发生异常时回滚Redis操作
-            stringRedisTemplate.opsForValue().increment("seckill:stock:" + goodsId);
-            stringRedisTemplate.opsForSet().remove("seckill:users:" + goodsId, Long.toString(userId));
-            return Result.error("系统异常，请稍后重试");
-        }
+            //异步创建订单,用MQ发送消息
+            SeckillMessage message = new SeckillMessage(userId, goodsId);
+            mqSender.sendSeckillMessage(message);
+        return Result.queue("您的订单已加入队列，稍后处理");
     }
 
     //将库存预热到缓存中
