@@ -30,5 +30,3 @@ mybatis-plus:
     db-config:
       # 配置主键策略为自动增长
       id-type: auto
-
-

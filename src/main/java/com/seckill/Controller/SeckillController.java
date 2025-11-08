@@ -4,6 +4,7 @@ import com.seckill.pojo.Result;
 
 import com.seckill.service.ISeckillService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,7 +18,8 @@ public class SeckillController {
 
     // 创建订单
     @GetMapping("/v1/execute")
-    public Result doSeckill(@RequestParam("goodsId") Long goodsId, @RequestParam("userId") Long userId){
+    public Result doSeckill(@RequestParam("goodsId") Long goodsId){
+        Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return seckillService.doSeckill(goodsId,userId);
     }
     //查询商品,添加到缓存中

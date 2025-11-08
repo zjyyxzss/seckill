@@ -16,10 +16,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Service
 public class SeckillServiceImpl extends ServiceImpl<SeckillGoodsMapper, SeckillGoods> implements ISeckillService {
@@ -42,12 +40,13 @@ public class SeckillServiceImpl extends ServiceImpl<SeckillGoodsMapper, SeckillG
     }
     /**
      * 秒杀
+     *
      * @param goodsId 商品id
-     * @param userId 用户id
+     * @param userId
      * @return 秒杀结果
      */
     @Override
-    public Result doSeckill(Long goodsId , Long userId) {
+    public Result doSeckill(Long goodsId, Long userId) {
             //2.执行lua脚本
             long result = stringRedisTemplate.execute(
                     SECKILL_SCRIPT,

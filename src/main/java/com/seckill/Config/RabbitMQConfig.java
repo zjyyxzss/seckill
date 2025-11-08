@@ -1,6 +1,9 @@
 package com.seckill.Config;
 
 import com.seckill.pojo.SeckillMessage;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -24,6 +27,25 @@ public class RabbitMQConfig {
         // durable: true 表示持久化，RabbitMQ 重启后队列不会丢失
         return new Queue(SECKILL_QUEUE, true);
     }
+
+    @Bean
+    public DirectExchange defaultExchange() {
+        return new DirectExchange("", true, false);
+    }
+
+    // 3. 声明绑定 (Binding)
+
+    @Bean
+    public Binding binding() {
+        return BindingBuilder.bind(seckillQueue())
+                .to(defaultExchange())
+                .with(SECKILL_QUEUE);
+    }
+
+
+
+
+
 
     /**
      * 配置消息转换器为JSON格式
